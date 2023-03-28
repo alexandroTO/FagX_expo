@@ -1,15 +1,18 @@
+// @ts-nocheck
 import axios from "axios";
 import * as SQLite from "expo-sqlite";
 
-const db = SQLite.openDatabase("xp");
+import React,{useState} from 'react'
+
+const db = SQLite.openDatabase("xp.db");
 export const init = () => {
   criarTabelas();
 };
 function create_table(tabela, sql) {
   var query = sql;
   try {
-    db.transaction(function (transaction) {
-      transaction.executeSql(query);
+    db.transaction((tx) => {
+      tx.executeSql(query);
       updateStatus(tabela, "OK");
       insert_data(tabela);
     });
@@ -37,9 +40,9 @@ function insert_data(tabela) {
       let n = response.data.split(";");
 
       try {
-        db.transaction(function (transaction) {
+        db.transaction(tx => {
           for (let i = 0; i < n.length - 1; i++) {
-            transaction.executeSql(n[i]);
+            tx.executeSql(n[i], []);
           }
         });
       } catch (e) {
@@ -88,7 +91,7 @@ function criarTabelas() {
   );
   create_table(
     "cadastro",
-    "CREATE TABLE IF NOT EXISTS cadastro(id_cadastro INTEGER PRIMARY KEY AUTOINCREMENT, nome VARCHAR NOT NULL, email VARCHAR NOT NULL, telefone INTEGER, colegio VARCHAR, cursoPretendido VARCHAR, estilo_musical VARCHAR);"
+    "CREATE TABLE IF NOT EXISTS cadastro(id_cadastro INTEGER PRIMARY KEY AUTOINCREMENT, nome VARCHAR NOT NULL, email VARCHAR, telefone INTEGER, colegio VARCHAR, cursoPretendido VARCHAR, estilo_musical VARCHAR);"
   );
   create_table(
     "bonus",
@@ -99,13 +102,6 @@ function criarTabelas() {
     "CREATE TABLE IF NOT EXISTS colegios(id_escola INTEGER PRIMARY KEY AUTOINCREMENT, nome_colegio VARCHAR);"
   );
   create_table("curso", "CREATE TABLE IF NOT EXISTS curso(cursos VARCHAR);");
-}
-function limpar_dados() {
-  if (confirm("Deseja realmente limpar os dados?")) {
-    delete_data("local");
-    delete_data("experiencia");
-    delete_data("cadastro");
-  }
 }
 
 //LIMPAR DADOS
@@ -132,28 +128,43 @@ function drop_table(tabela) {
     return;
   }
 }
-export function primeiro_cadastro(nome, fone) {
-  axios
-    .post(
-      "https://www2.fag.edu.br/aplicativo-ios/php/ajax.php?funcao=cadastro",
-      {
-        nome,
-        fone,
-      }
-    )
-    .then(function () {
-      try {
-        db.transaction(function (transaction) {
-          transaction.executeSql(
-            'INSERT INTO cadastro (nome, telefone,email, colegio, cursoPretendido, estilo_musical) VALUES ("' +
-              nome +
-              '", "' +
-              fone +
-              '", "", "", "", "")'
-          );
-        });
-      } catch (e) {
-        console.log("Error: " + e);
-      }
+
+export async function primeiro_cadastro(nome, fone) {
+  
+  const json = await axios.post(
+    "https://www2.fag.edu.br/aplicativo-ios/php/ajax.php?funcao=cadastro",
+    JSON.stringify({
+      nome,
+      fone,
+    })
+  );
+  const { data } = json.data;
+  // console.log(data);
+  if (data) {
+    return new Promise((resolve) => {
+      db.transaction(tx => {
+        tx.executeSql(
+          'INSERT INTO cadastro (nome, telefone) VALUES (?, ?)',[nome, fone],
+          (_, { insertId }) => resolve(insertId),
+        );
+      });
+    })
+
+
+    
+  } else {
+    return "cadastro inicial realizado";
+  }
+}
+export async function check_cadastro() {
+  return new Promise((resolve) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        'SELECT upper(nome) as nome FROM cadastro where id_cadastro = 1',[],
+        (txObj, { rows: { _array } }) => resolve(_array[0]?.nome),
+      );
     });
+  })
+ 
+  
 }

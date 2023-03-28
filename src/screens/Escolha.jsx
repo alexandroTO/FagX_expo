@@ -1,13 +1,17 @@
 // @ts-nocheck
-import React from "react";
-import { View, StyleSheet, Text, ScrollView } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, StyleSheet, Text, ScrollView, Button,SafeAreaView } from "react-native";
+import Checkbox from "expo-checkbox";
+import Hr from "react-native-hr-component";
 
+import { storeData, getData } from '../utils/storage'
 const styles = StyleSheet.create({
   corpo: {
     flex: 1,
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: "#fff",
+    marginTop: "6%",
   },
   cabecalho: {
     height: "8%",
@@ -32,8 +36,43 @@ const styles = StyleSheet.create({
 });
 
 function Escolha({ navigation }) {
+  const [isSelected, setSelection] = useState(false);
+  const [aceito, setAceito] = useState("");
+
+  
+  const check = () => {
+    
+    if (!isSelected) {
+       getData();
+      // alert('clicou')
+      if (aceito === "aceito") {
+        navigation.navigate("Ini");
+      }
+    } else {
+        storeData()
+        getData().then((data) => {
+          if(data){
+            navigation.navigate("Ini");
+          }
+        })
+        
+        
+    }
+    
+  };
+
+  useEffect(() => {
+    getData().then((data)=>{
+      
+      if(data === 'aceito'){
+        navigation.navigate('Ini');
+
+      }
+    });
+
+  }, []);
   return (
-    <View style={styles.corpo}>
+    <SafeAreaView style={styles.corpo}>
       <View style={styles.cabecalho}>
         <View style={styles.red}></View>
         <View style={styles.black}>
@@ -42,8 +81,8 @@ function Escolha({ navigation }) {
           </Text>
         </View>
       </View>
-      <ScrollView style={{padding:'5%', fontFamily:'Roboto'}}>
-      <Text style={{fontWeight:'bold',marginTop:'5%'}}>ACEITAÇÃO </Text>
+      <ScrollView style={{ padding: "5%", fontFamily: "Roboto" }}>
+        <Text style={{ fontWeight: "bold", marginTop: "5%" }}>ACEITAÇÃO </Text>
         <Text>
           Este é um contrato firmado entre você, de agora em diante denominado
           como usuário, e a Fundação Assis Gurgacz, cadastrada no CNPJ:
@@ -52,9 +91,10 @@ function Escolha({ navigation }) {
           FAG. Este “Termo de Uso de Aplicativo” rege o uso do aplicativo FAGX,
           para dispositivos móveis (Android e IOS).
         </Text>
-        <Text style={{fontWeight:'bold',marginTop:'5%'}}>LICENÇA LIMITADA </Text>
+        <Text style={{ fontWeight: "bold", marginTop: "5%" }}>
+          LICENÇA LIMITADA
+        </Text>
         <Text>
-          
           Você recebeu uma licença limitada, não transferível, não exclusiva,
           livre de royalties e revogável para baixar, instalar, executar e
           utilizar este aplicativo em seu dispositivo. Você reconhece e concorda
@@ -65,9 +105,10 @@ function Escolha({ navigation }) {
           textos, imagens ou quaisquer partes nele contido é expressamente
           proibida.
         </Text>
-        <Text style={{fontWeight:'bold',marginTop:'5%'}}>ALTERAÇÕES, MODIFICAÇÕES E RESCISÃO </Text>
+        <Text style={{ fontWeight: "bold", marginTop: "5%" }}>
+          ALTERAÇÕES, MODIFICAÇÕES E RESCISÃO
+        </Text>
         <Text>
-          
           A FAG reserva-se no direito de, a qualquer tempo, modificar estes
           termos seja incluindo, removendo ou alterando quaisquer de suas
           cláusulas. Tais modificações terão efeito imediato. Após publicadas
@@ -81,9 +122,10 @@ function Escolha({ navigation }) {
           ou licenciadores por quaisquer modificações, suspensões ou
           descontinuidade do aplicativo.
         </Text>
-        <Text style={{fontWeight:'bold',marginTop:'5%'}}>CONSENTIMENTO PARA COLETA E USO DE DADOS </Text>
+        <Text style={{ fontWeight: "bold", marginTop: "5%" }}>
+          CONSENTIMENTO PARA COLETA E USO DE DADOS{" "}
+        </Text>
         <Text>
-          
           Você concorda que a FAG pode coletar e usar dados técnicos de seu
           dispositivo tais como especificações, configurações, versões de
           sistema operacional, tipo de conexão à internet e afins. Os dados
@@ -91,9 +133,10 @@ function Escolha({ navigation }) {
           FAG, não podendo serem comercializados ou cedidos a outrem, sob
           nenhuma hipótese, preservando o seu direito a privacidade.
         </Text>
-        <Text style={{fontWeight:'bold',marginTop:'5%'}}>ISENÇÃO DE GARANTIAS E LIMITAÇÕES DE RESPONSABILIDADE </Text>
+        <Text style={{ fontWeight: "bold", marginTop: "5%" }}>
+          ISENÇÃO DE GARANTIAS E LIMITAÇÕES DE RESPONSABILIDADE{" "}
+        </Text>
         <Text>
-          
           Este aplicativo estará em contínuo desenvolvimento e pode conter erros
           e, por isso, o uso é fornecido "no estado em que se encontra" e sob
           risco do usuário final. Na extensão máxima permitida pela legislação
@@ -109,7 +152,7 @@ function Escolha({ navigation }) {
           promessas podem ser excluídas de acordo com o que é permitido por lei
           sem prejuízo à FAG e seus colaboradores.
         </Text>
-        <Text style={{marginBottom:'20%'}}>
+        <Text style={{ marginBottom: "5%" }}>
           I. A FAG não garante, declara ou assegura que o uso deste aplicativo
           será ininterrupto ou livre de erros e você concorda que a FAG poderá
           remover por períodos indefinidos ou cancelar este aplicativo a
@@ -125,9 +168,44 @@ function Escolha({ navigation }) {
           pressionar o botão “ACEITO”, você reconhecerá que analisou e aceitou
           as condições de uso, concordando em cumpri-los.
         </Text>
+        <View
+          style={{
+            marginBottom: "15%",
+            width: "100%",
+            flexDirection: "row",
+            gap: 5,
+          }}
+        >
+          <Checkbox
+            value={isSelected}
+            onValueChange={setSelection}
+            color={isSelected ? "green" : "red"}
+          />
+          {isSelected ? (
+            <Text style={{ color: "green" }}>Aceito os termos e condições</Text>
+          ) : (
+            <Text style={{ color: "red" }}>Aceito os termos e condições</Text>
+          )}
+        </View>
       </ScrollView>
-      <View></View>
-    </View>
+      <View
+        style={{
+          width: "100%",
+          justifyContent: "center",
+          alignItems: "center",
+          marginBottom: "5%",
+        }}
+      >
+        <Hr lineColor="#eee" width={1} text="" />
+        <Button
+          title="Aceito"
+          style={{ with: "30%" }}
+          color={"red"}
+          disabled={isSelected ? false : true}
+          onPress={check}
+        />
+      </View>
+    </SafeAreaView>
   );
 }
 export default Escolha;
